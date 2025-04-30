@@ -160,7 +160,6 @@ const ModelDetailDrawer = ({ model, isOpen, onClose }: ModelDetailDrawerProps) =
               <TabsContent value="documentation">
                 {model.documentation ? (
                   <GovernanceDocumentation 
-                    modelId={model.id}
                     initialDocumentation={model.documentation}
                     readOnly={true}
                   />
