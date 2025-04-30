@@ -69,7 +69,7 @@ const ReviewReminders = ({ models, onSelectModel }: ReviewRemindersProps) => {
     if (isModelReviewOverdue(model)) {
       return <Badge variant="destructive">Overdue</Badge>;
     } else if (isModelReviewDue(model)) {
-      return <Badge variant="warning" className="bg-yellow-500 hover:bg-yellow-600">Due</Badge>;
+      return <Badge variant="default" className="bg-yellow-500 hover:bg-yellow-600">Due</Badge>;
     } else {
       return <Badge variant="outline">Upcoming</Badge>;
     }
