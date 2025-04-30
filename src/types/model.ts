@@ -28,6 +28,21 @@ export interface Model {
   tier: ModelTier;
   gitRepoLink?: string;
   lastUpdated: string;
+  reviewDate?: string;
   materialityScores?: MaterialityScores;
   documentation?: GovernanceDocumentation;
+}
+
+export type AuditLogAction = "create" | "update" | "delete";
+
+export interface AuditLogEntry {
+  id: string;
+  modelId: string;
+  modelName: string;
+  timestamp: string;
+  action: AuditLogAction;
+  field?: string;
+  oldValue?: string;
+  newValue?: string;
+  modifiedBy: string;
 }
