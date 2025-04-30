@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from "react";
 import { v4 as uuidv4 } from "uuid";
-import { Model, ModelStatus, ModelTier } from "@/types/model";
+import { Model, ModelStatus, ModelTier, MaterialityScores, GovernanceDocumentation } from "@/types/model";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -33,6 +33,8 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
 import { toast } from "sonner";
+import MaterialityCalculator from "./MaterialityCalculator";
+import GovernanceDocumentationSection from "./GovernanceDocumentation";
 
 interface ModelFormModalProps {
   isOpen: boolean;
@@ -56,6 +58,12 @@ type ModelFormValues = z.infer<typeof modelFormSchema>;
 
 const ModelFormModal = ({ isOpen, onClose, onSave, modelToEdit }: ModelFormModalProps) => {
   const isEditMode = !!modelToEdit;
+  const [materialityScores, setMaterialityScores] = useState<MaterialityScores | undefined>(
+    modelToEdit?.materialityScores
+  );
+  const [documentation, setDocumentation] = useState<GovernanceDocumentation | undefined>(
+    modelToEdit?.documentation
+  );
 
   const form = useForm<ModelFormValues>({
     resolver: zodResolver(modelFormSchema),
@@ -84,6 +92,8 @@ const ModelFormModal = ({ isOpen, onClose, onSave, modelToEdit }: ModelFormModal
         tier: modelToEdit.tier,
         gitRepoLink: modelToEdit.gitRepoLink || "",
       });
+      setMaterialityScores(modelToEdit.materialityScores);
+      setDocumentation(modelToEdit.documentation);
     } else {
       form.reset({
         name: "",
@@ -95,8 +105,20 @@ const ModelFormModal = ({ isOpen, onClose, onSave, modelToEdit }: ModelFormModal
         tier: 3 as ModelTier,
         gitRepoLink: "",
       });
+      setMaterialityScores(undefined);
+      setDocumentation(undefined);
     }
   }, [modelToEdit, form]);
+
+  const handleMaterialityUpdate = (scores: MaterialityScores, calculatedTier: ModelTier) => {
+    setMaterialityScores(scores);
+    form.setValue("tier", calculatedTier);
+  };
+
+  const handleDocumentationUpdate = (docs: GovernanceDocumentation) => {
+    setDocumentation(docs);
+    toast.success("Documentation updated");
+  };
 
   const onSubmit = (data: ModelFormValues) => {
     try {
@@ -113,6 +135,8 @@ const ModelFormModal = ({ isOpen, onClose, onSave, modelToEdit }: ModelFormModal
         tier: data.tier,
         lastUpdated: new Date().toISOString(),
         gitRepoLink: data.gitRepoLink || undefined,
+        materialityScores: materialityScores,
+        documentation: documentation,
       };
       
       onSave(model);
@@ -204,22 +228,30 @@ const ModelFormModal = ({ isOpen, onClose, onSave, modelToEdit }: ModelFormModal
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Tier*</FormLabel>
-                    <Select
-                      onValueChange={(value) => field.onChange(Number(value) as ModelTier)}
-                      defaultValue={String(field.value)}
-                      value={String(field.value)}
-                    >
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select tier" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value="1">Tier 1 (Critical)</SelectItem>
-                        <SelectItem value="2">Tier 2 (High Impact)</SelectItem>
-                        <SelectItem value="3">Tier 3 (Standard)</SelectItem>
-                      </SelectContent>
-                    </Select>
+                    <div className="flex space-x-2 items-end">
+                      <div className="flex-1">
+                        <Select
+                          onValueChange={(value) => field.onChange(Number(value) as ModelTier)}
+                          defaultValue={String(field.value)}
+                          value={String(field.value)}
+                        >
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select tier" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="1">Tier 1 (Critical)</SelectItem>
+                            <SelectItem value="2">Tier 2 (High Impact)</SelectItem>
+                            <SelectItem value="3">Tier 3 (Standard)</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <MaterialityCalculator
+                        initialValues={materialityScores}
+                        onSave={handleMaterialityUpdate}
+                      />
+                    </div>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -284,6 +316,13 @@ const ModelFormModal = ({ isOpen, onClose, onSave, modelToEdit }: ModelFormModal
                     <FormMessage />
                   </FormItem>
                 )}
+              />
+            </div>
+
+            <div className="pt-4 border-t">
+              <GovernanceDocumentationSection
+                initialValues={documentation}
+                onSave={handleDocumentationUpdate}
               />
             </div>
 
