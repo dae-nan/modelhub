@@ -10,18 +10,36 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Edit, Plus } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Edit, Plus, Search, Filter } from "lucide-react";
 import { useState, useMemo } from "react";
 
 interface ModelInventoryTableProps {
   models: Model[];
   onEdit: (model: Model) => void;
   onCreateNew: () => void;
+  onViewDetails: (model: Model) => void;
 }
 
-const ModelInventoryTable = ({ models, onEdit, onCreateNew }: ModelInventoryTableProps) => {
+const ModelInventoryTable = ({ 
+  models, 
+  onEdit, 
+  onCreateNew, 
+  onViewDetails 
+}: ModelInventoryTableProps) => {
   const [sortColumn, setSortColumn] = useState<keyof Model>("lastUpdated");
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("desc");
+  const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [tierFilter, setTierFilter] = useState<string>("all");
+  const [businessUnitFilter, setBusinessUnitFilter] = useState<string>("all");
 
   const handleSort = (column: keyof Model) => {
     if (sortColumn === column) {
@@ -32,21 +50,53 @@ const ModelInventoryTable = ({ models, onEdit, onCreateNew }: ModelInventoryTabl
     }
   };
 
-  const sortedModels = useMemo(() => {
-    return [...models].sort((a, b) => {
-      const aValue = a[sortColumn];
-      const bValue = b[sortColumn];
+  // Extract unique business units for the filter dropdown
+  const businessUnits = useMemo(() => {
+    return Array.from(new Set(models.map((model) => model.businessUnit)));
+  }, [models]);
 
-      if (typeof aValue === "string" && typeof bValue === "string") {
-        return sortDirection === "asc"
-          ? aValue.localeCompare(bValue)
-          : bValue.localeCompare(aValue);
-      } else if (typeof aValue === "number" && typeof bValue === "number") {
-        return sortDirection === "asc" ? aValue - bValue : bValue - aValue;
-      }
-      return 0;
-    });
-  }, [models, sortColumn, sortDirection]);
+  const filteredAndSortedModels = useMemo(() => {
+    return [...models]
+      // Apply search filter
+      .filter((model) => {
+        if (!searchTerm) return true;
+        
+        const searchLower = searchTerm.toLowerCase();
+        return (
+          model.name.toLowerCase().includes(searchLower) || 
+          model.owner.toLowerCase().includes(searchLower)
+        );
+      })
+      // Apply status filter
+      .filter((model) => {
+        if (statusFilter === "all") return true;
+        return model.status === statusFilter;
+      })
+      // Apply tier filter
+      .filter((model) => {
+        if (tierFilter === "all") return true;
+        return model.tier === parseInt(tierFilter, 10) as ModelTier;
+      })
+      // Apply business unit filter
+      .filter((model) => {
+        if (businessUnitFilter === "all") return true;
+        return model.businessUnit === businessUnitFilter;
+      })
+      // Sort
+      .sort((a, b) => {
+        const aValue = a[sortColumn];
+        const bValue = b[sortColumn];
+
+        if (typeof aValue === "string" && typeof bValue === "string") {
+          return sortDirection === "asc"
+            ? aValue.localeCompare(bValue)
+            : bValue.localeCompare(aValue);
+        } else if (typeof aValue === "number" && typeof bValue === "number") {
+          return sortDirection === "asc" ? aValue - bValue : bValue - aValue;
+        }
+        return 0;
+      });
+  }, [models, sortColumn, sortDirection, searchTerm, statusFilter, tierFilter, businessUnitFilter]);
 
   const getStatusColor = (status: ModelStatus) => {
     switch (status) {
@@ -91,6 +141,64 @@ const ModelInventoryTable = ({ models, onEdit, onCreateNew }: ModelInventoryTabl
         </Button>
       </div>
 
+      <div className="mb-6 space-y-4">
+        <div className="flex items-center gap-2">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-500" />
+            <Input
+              placeholder="Search by model name or owner..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-10"
+            />
+          </div>
+          <div className="flex items-center gap-2">
+            <Filter className="h-4 w-4 text-gray-500" />
+            <span className="text-sm font-medium">Filters:</span>
+          </div>
+        </div>
+        
+        <div className="flex flex-wrap gap-2">
+          <Select value={statusFilter} onValueChange={setStatusFilter}>
+            <SelectTrigger className="w-[140px]">
+              <SelectValue placeholder="Status" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Statuses</SelectItem>
+              <SelectItem value="Draft">Draft</SelectItem>
+              <SelectItem value="Approved">Approved</SelectItem>
+              <SelectItem value="Retired">Retired</SelectItem>
+            </SelectContent>
+          </Select>
+
+          <Select value={tierFilter} onValueChange={setTierFilter}>
+            <SelectTrigger className="w-[140px]">
+              <SelectValue placeholder="Tier" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Tiers</SelectItem>
+              <SelectItem value="1">Tier 1</SelectItem>
+              <SelectItem value="2">Tier 2</SelectItem>
+              <SelectItem value="3">Tier 3</SelectItem>
+            </SelectContent>
+          </Select>
+
+          <Select value={businessUnitFilter} onValueChange={setBusinessUnitFilter}>
+            <SelectTrigger className="w-[180px]">
+              <SelectValue placeholder="Business Unit" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Business Units</SelectItem>
+              {businessUnits.map((unit) => (
+                <SelectItem key={unit} value={unit}>
+                  {unit}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+
       <div className="border rounded-lg overflow-hidden bg-white">
         <Table>
           <TableHeader>
@@ -129,15 +237,19 @@ const ModelInventoryTable = ({ models, onEdit, onCreateNew }: ModelInventoryTabl
             </TableRow>
           </TableHeader>
           <TableBody>
-            {sortedModels.length === 0 ? (
+            {filteredAndSortedModels.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={6} className="h-32 text-center">
                   No models found. Create your first model to get started.
                 </TableCell>
               </TableRow>
             ) : (
-              sortedModels.map((model) => (
-                <TableRow key={model.id} className="hover:bg-gray-50">
+              filteredAndSortedModels.map((model) => (
+                <TableRow 
+                  key={model.id} 
+                  className="hover:bg-gray-50 cursor-pointer"
+                  onClick={() => onViewDetails(model)}
+                >
                   <TableCell className="font-medium">{model.name}</TableCell>
                   <TableCell>{model.owner}</TableCell>
                   <TableCell>
@@ -151,7 +263,10 @@ const ModelInventoryTable = ({ models, onEdit, onCreateNew }: ModelInventoryTabl
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => onEdit(model)}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onEdit(model);
+                      }}
                       className="text-modelhub-primary border-modelhub-primary hover:bg-modelhub-secondary"
                     >
                       <Edit className="h-4 w-4 mr-1" /> Edit

@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import Header from "@/components/Header";
 import ModelInventoryTable from "@/components/ModelInventoryTable";
 import ModelFormModal from "@/components/ModelFormModal";
+import ModelDetailDrawer from "@/components/ModelDetailDrawer";
 import ReviewReminders from "@/components/ReviewReminders";
 import AuditLogViewer from "@/components/AuditLogViewer";
 import { Model } from "@/types/model";
@@ -14,6 +15,8 @@ const Index = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modelToEdit, setModelToEdit] = useState<Model | undefined>(undefined);
   const [selectedModelId, setSelectedModelId] = useState<string | undefined>(undefined);
+  const [selectedModel, setSelectedModel] = useState<Model | null>(null);
+  const [isDetailDrawerOpen, setIsDetailDrawerOpen] = useState(false);
 
   // Load models from localStorage on component mount
   useEffect(() => {
@@ -59,6 +62,15 @@ const Index = () => {
     }
   };
 
+  const handleViewDetails = (model: Model) => {
+    setSelectedModel(model);
+    setIsDetailDrawerOpen(true);
+  };
+
+  const handleCloseDetailDrawer = () => {
+    setIsDetailDrawerOpen(false);
+  };
+
   return (
     <div className="min-h-screen flex flex-col bg-modelhub-background">
       <Header />
@@ -75,7 +87,8 @@ const Index = () => {
             <ModelInventoryTable 
               models={models} 
               onEdit={handleEdit} 
-              onCreateNew={handleCreateNew} 
+              onCreateNew={handleCreateNew}
+              onViewDetails={handleViewDetails}
             />
           </TabsContent>
           
@@ -99,6 +112,12 @@ const Index = () => {
         onClose={handleCloseModal} 
         onSave={handleSave} 
         modelToEdit={modelToEdit} 
+      />
+
+      <ModelDetailDrawer
+        model={selectedModel}
+        isOpen={isDetailDrawerOpen}
+        onClose={handleCloseDetailDrawer}
       />
     </div>
   );
