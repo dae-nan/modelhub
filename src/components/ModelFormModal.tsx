@@ -100,10 +100,19 @@ const ModelFormModal = ({ isOpen, onClose, onSave, modelToEdit }: ModelFormModal
 
   const onSubmit = (data: ModelFormValues) => {
     try {
+      // Create a model object with the required properties
+      // Explicitly cast properties to ensure they match the Model interface
       const model: Model = {
         id: modelToEdit?.id || uuidv4(),
-        ...data,
+        name: data.name,
+        businessUnit: data.businessUnit,
+        owner: data.owner,
+        description: data.description,
+        domain: data.domain,
+        status: data.status,
+        tier: data.tier,
         lastUpdated: new Date().toISOString(),
+        gitRepoLink: data.gitRepoLink || undefined,
       };
       
       onSave(model);
