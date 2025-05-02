@@ -160,8 +160,9 @@ const ModelDetailDrawer = ({ model, isOpen, onClose }: ModelDetailDrawerProps) =
               <TabsContent value="documentation">
                 {model.documentation ? (
                   <GovernanceDocumentation 
-                    initialDocumentation={model.documentation}
+                    initialValues={model.documentation}
                     readOnly={true}
+                    onSave={() => {}}
                   />
                 ) : (
                   <div className="py-8 text-center text-gray-500">
