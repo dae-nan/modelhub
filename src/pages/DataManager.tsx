@@ -1,4 +1,3 @@
-
 import { useState, useRef } from "react";
 import { getModels, saveModels } from "@/lib/storage";
 import { Model } from "@/types/model";
@@ -6,7 +5,7 @@ import Header from "@/components/Header";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { download, upload } from "lucide-react";
+import { Download, Upload } from "lucide-react";
 
 const DataManager = () => {
   const { toast } = useToast();
@@ -140,7 +139,7 @@ const DataManager = () => {
                 onClick={handleExportModels} 
                 className="w-full flex items-center justify-center"
               >
-                <download className="mr-2 h-4 w-4" />
+                <Download className="mr-2 h-4 w-4" />
                 Export All Models
               </Button>
             </CardContent>
@@ -158,7 +157,7 @@ const DataManager = () => {
                 onClick={handleImportClick} 
                 className="w-full flex items-center justify-center"
               >
-                <upload className="mr-2 h-4 w-4" />
+                <Upload className="mr-2 h-4 w-4" />
                 Import Models
               </Button>
               
