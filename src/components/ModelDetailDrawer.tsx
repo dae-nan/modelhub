@@ -12,7 +12,7 @@ import {
   DrawerTitle,
 } from "@/components/ui/drawer";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Calendar, ExternalLink } from "lucide-react";
+import { Calendar, ExternalLink, Link } from "lucide-react";
 import AuditLogViewer from "./AuditLogViewer";
 import GovernanceDocumentation from "./GovernanceDocumentation";
 
@@ -80,6 +80,7 @@ const ModelDetailDrawer = ({ model, isOpen, onClose }: ModelDetailDrawerProps) =
             <Tabs defaultValue="overview" className="w-full">
               <TabsList className="mb-4">
                 <TabsTrigger value="overview">Overview</TabsTrigger>
+                <TabsTrigger value="lineage">Data Lineage</TabsTrigger>
                 <TabsTrigger value="documentation">Documentation</TabsTrigger>
                 <TabsTrigger value="audit">Audit Log</TabsTrigger>
               </TabsList>
@@ -152,6 +153,50 @@ const ModelDetailDrawer = ({ model, isOpen, onClose }: ModelDetailDrawerProps) =
                           )}
                         </div>
                       </div>
+                    )}
+                  </div>
+                </div>
+              </TabsContent>
+              
+              <TabsContent value="lineage" className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <h3 className="text-lg font-medium mb-2">Upstream Systems</h3>
+                    {model.dataLineage?.upstream && model.dataLineage.upstream.length > 0 ? (
+                      <div className="flex flex-wrap gap-2 mb-4">
+                        {model.dataLineage.upstream.map((system, index) => (
+                          <Badge 
+                            key={index} 
+                            className="flex items-center bg-blue-100 text-blue-800 hover:bg-blue-200 cursor-pointer"
+                            onClick={() => window.open(`/search?q=${encodeURIComponent(system)}`, '_blank')}
+                          >
+                            <Link className="h-3.5 w-3.5 mr-1" />
+                            {system}
+                          </Badge>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="text-gray-500">No upstream systems defined</p>
+                    )}
+                  </div>
+                  
+                  <div>
+                    <h3 className="text-lg font-medium mb-2">Downstream Systems</h3>
+                    {model.dataLineage?.downstream && model.dataLineage.downstream.length > 0 ? (
+                      <div className="flex flex-wrap gap-2 mb-4">
+                        {model.dataLineage.downstream.map((system, index) => (
+                          <Badge 
+                            key={index} 
+                            className="flex items-center bg-purple-100 text-purple-800 hover:bg-purple-200 cursor-pointer"
+                            onClick={() => window.open(`/search?q=${encodeURIComponent(system)}`, '_blank')}
+                          >
+                            <Link className="h-3.5 w-3.5 mr-1" />
+                            {system}
+                          </Badge>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="text-gray-500">No downstream systems defined</p>
                     )}
                   </div>
                 </div>

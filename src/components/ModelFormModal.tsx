@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { v4 as uuidv4 } from "uuid";
 import { Model, ModelStatus, ModelTier, MaterialityScores, GovernanceDocumentation } from "@/types/model";
@@ -52,6 +51,10 @@ const modelFormSchema = z.object({
   status: z.enum(["Draft", "Approved", "Retired"]),
   tier: z.union([z.literal(1), z.literal(2), z.literal(3)]),
   gitRepoLink: z.string().url("Please enter a valid URL").optional().or(z.literal("")),
+  dataLineage: z.object({
+    upstream: z.array(z.string()).optional(),
+    downstream: z.array(z.string()).optional(),
+  }).optional(),
 });
 
 type ModelFormValues = z.infer<typeof modelFormSchema>;
@@ -76,6 +79,10 @@ const ModelFormModal = ({ isOpen, onClose, onSave, modelToEdit }: ModelFormModal
       status: "Draft" as ModelStatus,
       tier: 3 as ModelTier,
       gitRepoLink: "",
+      dataLineage: {
+        upstream: modelToEdit?.dataLineage?.upstream || [],
+        downstream: modelToEdit?.dataLineage?.downstream || []
+      }
     },
   });
 
@@ -91,6 +98,10 @@ const ModelFormModal = ({ isOpen, onClose, onSave, modelToEdit }: ModelFormModal
         status: modelToEdit.status,
         tier: modelToEdit.tier,
         gitRepoLink: modelToEdit.gitRepoLink || "",
+        dataLineage: {
+          upstream: modelToEdit.dataLineage?.upstream || [],
+          downstream: modelToEdit.dataLineage?.downstream || []
+        }
       });
       setMaterialityScores(modelToEdit.materialityScores);
       setDocumentation(modelToEdit.documentation);
@@ -104,6 +115,10 @@ const ModelFormModal = ({ isOpen, onClose, onSave, modelToEdit }: ModelFormModal
         status: "Draft" as ModelStatus,
         tier: 3 as ModelTier,
         gitRepoLink: "",
+        dataLineage: {
+          upstream: [],
+          downstream: []
+        }
       });
       setMaterialityScores(undefined);
       setDocumentation(undefined);
@@ -324,6 +339,97 @@ const ModelFormModal = ({ isOpen, onClose, onSave, modelToEdit }: ModelFormModal
                 initialValues={documentation}
                 onSave={handleDocumentationUpdate}
               />
+            </div>
+
+            <div className="space-y-4">
+              <Separator className="my-4" />
+              <h3 className="text-lg font-medium">Data Lineage</h3>
+              
+              <div>
+                <Label htmlFor="upstream">Upstream Systems</Label>
+                <div className="flex items-center space-x-2 mt-1">
+                  <Input
+                    id="upstream"
+                    placeholder="Enter system name or ID and press Enter"
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' && e.currentTarget.value.trim() !== '') {
+                        e.preventDefault();
+                        const currentValue = e.currentTarget.value.trim();
+                        const upstream = form.getValues("dataLineage.upstream") || [];
+                        form.setValue("dataLineage.upstream", [...upstream, currentValue]);
+                        e.currentTarget.value = '';
+                      }
+                    }}
+                  />
+                </div>
+                <div className="flex flex-wrap gap-2 mt-2">
+                  {form.watch("dataLineage.upstream")?.map((system, index) => (
+                    <Badge 
+                      key={index} 
+                      className="bg-blue-100 text-blue-800 flex items-center"
+                      variant="outline"
+                    >
+                      {system}
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        className="h-4 w-4 p-0 ml-1"
+                        onClick={() => {
+                          const upstream = [...(form.getValues("dataLineage.upstream") || [])];
+                          upstream.splice(index, 1);
+                          form.setValue("dataLineage.upstream", upstream);
+                        }}
+                      >
+                        <X className="h-3 w-3" />
+                      </Button>
+                    </Badge>
+                  ))}
+                </div>
+              </div>
+              
+              <div>
+                <Label htmlFor="downstream">Downstream Systems</Label>
+                <div className="flex items-center space-x-2 mt-1">
+                  <Input
+                    id="downstream"
+                    placeholder="Enter system name or ID and press Enter"
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' && e.currentTarget.value.trim() !== '') {
+                        e.preventDefault();
+                        const currentValue = e.currentTarget.value.trim();
+                        const downstream = form.getValues("dataLineage.downstream") || [];
+                        form.setValue("dataLineage.downstream", [...downstream, currentValue]);
+                        e.currentTarget.value = '';
+                      }
+                    }}
+                  />
+                </div>
+                <div className="flex flex-wrap gap-2 mt-2">
+                  {form.watch("dataLineage.downstream")?.map((system, index) => (
+                    <Badge 
+                      key={index} 
+                      className="bg-purple-100 text-purple-800 flex items-center"
+                      variant="outline"
+                    >
+                      {system}
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        className="h-4 w-4 p-0 ml-1"
+                        onClick={() => {
+                          const downstream = [...(form.getValues("dataLineage.downstream") || [])];
+                          downstream.splice(index, 1);
+                          form.setValue("dataLineage.downstream", downstream);
+                        }}
+                      >
+                        <X className="h-3 w-3" />
+                      </Button>
+                    </Badge>
+                  ))}
+                </div>
+              </div>
             </div>
 
             <DialogFooter>

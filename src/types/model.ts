@@ -17,6 +17,11 @@ export interface GovernanceDocumentation {
   monitoringPlan?: string;
 }
 
+export interface DataLineage {
+  upstream?: string[];
+  downstream?: string[];
+}
+
 export interface Model {
   id: string;
   name: string;
@@ -31,6 +36,7 @@ export interface Model {
   reviewDate?: string;
   materialityScores?: MaterialityScores;
   documentation?: GovernanceDocumentation;
+  dataLineage?: DataLineage;
 }
 
 export type AuditLogAction = "create" | "update" | "delete";
